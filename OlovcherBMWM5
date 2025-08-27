@@ -1,0 +1,292 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local CoreGui = game.CoreGui
+
+-- Checker to save initial hitbox states
+local initialStates = {}
+
+-- Function to save initial state for a player's character
+local function saveInitialState(player)
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = player.Character.HumanoidRootPart
+        initialStates[player.Name] = {
+            Size = hrp.Size,
+            Transparency = hrp.Transparency,
+            BrickColor = hrp.BrickColor,
+            Material = hrp.Material,
+            CanCollide = hrp.CanCollide
+        }
+    end
+end
+
+-- Save initial states for existing players
+for _, player in pairs(Players:GetPlayers()) do
+    saveInitialState(player)
+end
+
+-- Update initial states for new players or character respawns
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        saveInitialState(player)
+    end)
+end)
+
+-- Create ScreenGui
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = CoreGui
+ScreenGui.Name = "HitboxGui"
+
+-- Create main Frame
+local main = Instance.new("Frame")
+main.Name = "main"
+main.Parent = ScreenGui
+main.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+main.Position = UDim2.new(0.4, 0, 0.3, 0)
+main.Size = UDim2.new(0, 200, 0, 300)
+main.Active = true
+main.Draggable = true
+
+-- Create title Label
+local label = Instance.new("TextLabel")
+label.Name = "label"
+label.Parent = main
+label.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+label.Size = UDim2.new(1, 0, 0, 30)
+label.Font = Enum.Font.SourceSansBold
+label.Text = "Хiтбоксi"
+label.TextColor3 = Color3.fromRGB(255, 255, 255)
+label.TextScaled = true
+label.TextSize = 20
+label.TextWrapped = true
+
+-- Create Minimize Button
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Name = "MinimizeButton"
+minimizeButton.Parent = main
+minimizeButton.BackgroundColor3 = Color3.fromRGB(255, 165, 0)
+minimizeButton.Position = UDim2.new(0.8, 0, 0, 5)
+minimizeButton.Size = UDim2.new(0, 20, 0, 20)
+minimizeButton.Font = Enum.Font.SourceSansBold
+minimizeButton.Text = "-"
+minimizeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeButton.TextScaled = true
+
+-- Create Close Button
+local closeButton = Instance.new("TextButton")
+closeButton.Name = "CloseButton"
+closeButton.Parent = main
+closeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+closeButton.Position = UDim2.new(0.9, 0, 0, 5)
+closeButton.Size = UDim2.new(0, 20, 0, 20)
+closeButton.Font = Enum.Font.SourceSansBold
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeButton.TextScaled = true
+
+-- Create Minimize Icon (Circle with Checkmark)
+local minimizeIcon = Instance.new("TextButton")
+minimizeIcon.Name = "MinimizeIcon"
+minimizeIcon.Parent = ScreenGui
+minimizeIcon.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+minimizeIcon.Position = UDim2.new(1, -30, 0, 10)
+minimizeIcon.Size = UDim2.new(0, 20, 0, 20)
+minimizeIcon.BackgroundTransparency = 0.2
+minimizeIcon.Text = "✔"
+minimizeIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+minimizeIcon.TextScaled = true
+minimizeIcon.Visible = false
+minimizeIcon.BorderSizePixel = 0
+minimizeIcon.AutoButtonColor = false
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(1, 0)
+corner.Parent = minimizeIcon
+
+-- Create Size Slider
+local sizeLabel = Instance.new("TextLabel")
+sizeLabel.Parent = main
+sizeLabel.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+sizeLabel.Position = UDim2.new(0.1, 0, 0.15, 0)
+sizeLabel.Size = UDim2.new(0.8, 0, 0, 20)
+sizeLabel.Font = Enum.Font.SourceSans
+sizeLabel.Text = "Размер: 20"
+sizeLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+sizeLabel.TextScaled = true
+
+local sizeSlider = Instance.new("TextBox")
+sizeSlider.Parent = main
+sizeSlider.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+sizeSlider.Position = UDim2.new(0.1, 0, 0.22, 0)
+sizeSlider.Size = UDim2.new(0.8, 0, 0, 20)
+sizeSlider.Font = Enum.Font.SourceSans
+sizeSlider.Text = "20"
+sizeSlider.TextColor3 = Color3.fromRGB(0, 0, 0)
+sizeSlider.TextScaled = true
+
+-- Create Transparency Slider
+local transLabel = Instance.new("TextLabel")
+transLabel.Parent = main
+transLabel.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+transLabel.Position = UDim2.new(0.1, 0, 0.32, 0)
+transLabel.Size = UDim2.new(0.8, 0, 0, 20)
+transLabel.Font = Enum.Font.SourceSans
+transLabel.Text = "Прозрачность: 0.7"
+transLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+transLabel.TextScaled = true
+
+local transSlider = Instance.new("TextBox")
+transSlider.Parent = main
+transSlider.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+transSlider.Position = UDim2.new(0.1, 0, 0.39, 0)
+transSlider.Size = UDim2.new(0.8, 0, 0, 20)
+transSlider.Font = Enum.Font.SourceSans
+transSlider.Text = "0.7"
+transSlider.TextColor3 = Color3.fromRGB(0, 0, 0)
+transSlider.TextScaled = true
+
+-- Create Color Selection
+local colorLabel = Instance.new("TextLabel")
+colorLabel.Parent = main
+colorLabel.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+colorLabel.Position = UDim2.new(0.1, 0, 0.49, 0)
+colorLabel.Size = UDim2.new(0.8, 0, 0, 20)
+colorLabel.Font = Enum.Font.SourceSans
+colorLabel.Text = "Цвет:"
+colorLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
+colorLabel.TextScaled = true
+
+local colors = {
+    ["Черный"] = BrickColor.new("Really black"),
+    ["Красный"] = BrickColor.new("Really red"),
+    ["Голубой"] = BrickColor.new("Really blue"),
+    ["Зеленый"] = BrickColor.new("Really green"),
+    ["Желтый"] = BrickColor.new("Really yellow")
+}
+local currentColor = colors["Черный"]
+
+local colorButtonsFrame = Instance.new("Frame")
+colorButtonsFrame.Parent = main
+colorButtonsFrame.BackgroundTransparency = 1
+colorButtonsFrame.Position = UDim2.new(0.1, 0, 0.56, 0)
+colorButtonsFrame.Size = UDim2.new(0.8, 0, 0, 60)
+
+local function createColorButton(name, brickColor, position)
+    local button = Instance.new("TextButton")
+    button.Parent = colorButtonsFrame
+    button.BackgroundColor3 = brickColor.Color
+    button.Position = UDim2.new(position, 0, 0, 0)
+    button.Size = UDim2.new(0.18, 0, 0.5, 0)
+    button.Font = Enum.Font.SourceSans
+    button.Text = name
+    button.TextColor3 = Color3.fromRGB(255, 255, 255)
+    button.TextScaled = true
+    button.MouseButton1Click:Connect(function()
+        currentColor = brickColor
+        colorLabel.Text = "Цвет: " .. name
+    end)
+end
+
+local i = 0
+for name, brickColor in pairs(colors) do
+    createColorButton(name, brickColor, i * 0.2)
+    i = i + 1
+end
+
+-- Create Reset Button
+local resetButton = Instance.new("TextButton")
+resetButton.Parent = main
+resetButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+resetButton.Position = UDim2.new(0.1, 0, 0.75, 0)
+resetButton.Size = UDim2.new(0.8, 0, 0, 30)
+resetButton.Font = Enum.Font.SourceSansBold
+resetButton.Text = "Сброс"
+resetButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+resetButton.TextScaled = true
+
+-- Create Apply Button
+local applyButton = Instance.new("TextButton")
+applyButton.Parent = main
+applyButton.BackgroundColor3 = Color3.fromRGB(0, 0, 255)
+applyButton.Position = UDim2.new(0.1, 0, 0.85, 0)
+applyButton.Size = UDim2.new(0.8, 0, 0, 30)
+applyButton.Font = Enum.Font.SourceSansBold
+applyButton.Text = "Использовать"
+applyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+applyButton.TextScaled = true
+
+-- Variables for hitbox modification
+_G.HeadSize = 20
+_G.Transparency = 0.7
+_G.Disabled = false
+
+-- Apply hitbox changes
+local function applyHitboxChanges()
+    _G.HeadSize = tonumber(sizeSlider.Text) or 20
+    _G.Transparency = tonumber(transSlider.Text) or 0.7
+    _G.Disabled = true
+    sizeLabel.Text = "Размер: " .. _G.HeadSize
+    transLabel.Text = "Прозрачность: " .. _G.Transparency
+end
+
+-- Reset hitbox to initial states and disable visualization
+local function resetHitboxes()
+    _G.Disabled = false -- Disable hitbox visualization
+    for _, player in pairs(Players:GetPlayers()) do
+        if player.Name ~= Players.LocalPlayer.Name and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local state = initialStates[player.Name]
+            if state then
+                pcall(function()
+                    local hrp = player.Character.HumanoidRootPart
+                    hrp.Size = state.Size
+                    hrp.Transparency = state.Transparency
+                    hrp.BrickColor = state.BrickColor
+                    hrp.Material = state.Material
+                    hrp.CanCollide = state.CanCollide
+                end)
+            end
+        end
+    end
+    sizeSlider.Text = "20"
+    transSlider.Text = "0.7"
+    sizeLabel.Text = "Размер: 20"
+    transLabel.Text = "Прозрачность: 0.7"
+    currentColor = colors["Черный"]
+    colorLabel.Text = "Цвет: Черный"
+end
+
+-- Update hitboxes
+RunService.RenderStepped:Connect(function()
+    if _G.Disabled then
+        for _, player in pairs(Players:GetPlayers()) do
+            if player.Name ~= Players.LocalPlayer.Name and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                pcall(function()
+                    local hrp = player.Character.HumanoidRootPart
+                    hrp.Size = Vector3.new(_G.HeadSize, _G.HeadSize, _G.HeadSize)
+                    hrp.Transparency = _G.Transparency
+                    hrp.BrickColor = currentColor
+                    hrp.Material = "Neon"
+                    hrp.CanCollide = false
+                end)
+            end
+        end
+    end
+end)
+
+-- Button connections
+applyButton.MouseButton1Click:Connect(applyHitboxChanges)
+
+resetButton.MouseButton1Click:Connect(resetHitboxes)
+
+minimizeButton.MouseButton1Click:Connect(function()
+    main.Visible = false
+    minimizeIcon.Visible = true
+end)
+
+minimizeIcon.MouseButton1Click:Connect(function()
+    main.Visible = true
+    minimizeIcon.Visible = false
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    resetHitboxes() -- Reset hitboxes and disable visualization
+    ScreenGui:Destroy() -- Destroy the GUI
+end)
